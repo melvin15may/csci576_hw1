@@ -55,7 +55,7 @@ def average_pixels(pixels, i_min, i_max, j_min, j_max):
             r += pixels[i, j][0]
             g += pixels[i, j][1]
             b += pixels[i, j][2]
-    # print (r / n, g / n, b / n)
+
     return (r / n, g / n, b / n)
 
 
@@ -88,7 +88,7 @@ def gaussian_down_sampling(pixels, resolution, new_resolution):
     return outp
 
 
-def nearest_neighbor(pixels, resolution, new_resolution):
+def nearest_neighbor_up_sampling(pixels, resolution, new_resolution):
     img = Image.new('RGB', tuple(new_resolution))
     outp = img.load()
 
@@ -96,8 +96,38 @@ def nearest_neighbor(pixels, resolution, new_resolution):
     y_scale = new_resolution[1] * 1.0 / resolution[1]
 
     for i in range(new_resolution[0]):
+        i_scale = int(i / x_scale)
         for j in range(new_resolution[1]):
-        	outp[i, j] = pixels[int(i / x_scale), int(j / y_scale)]
+            outp[i, j] = pixels[i_scale, int(j / y_scale)]
+
+    return outp
+
+
+def bilinear_up_sampling(pixels, resolution, new_resolution):
+    img = Image.new('RGB', tuple(new_resolution))
+    outp = img.load()
+
+    x_scale = resolution[0] * 1.0 / new_resolution[0]
+    y_scale = 1.0 * resolution[1] / new_resolution[1]
+
+    for i in range(new_resolution[0]):
+        i_scale = i * x_scale
+        i_int = int(i_scale)
+        i_delta = i_scale - i_int
+        if i_int >= resolution[0] - 1:
+            	i_int -= 1
+        for j in range(new_resolution[1]):
+            j_scale = j * y_scale
+            j_int = int(j_scale)
+            j_delta = j_scale - j_int
+            if j_int >= resolution[1] - 1:
+            	j_int -= 1
+            a = [x * i_delta * (1 - j_delta) for x in pixels[i_int + 1, j_int]]
+            b = [x * (1 - i_delta) * (1 - j_delta)
+                 for x in pixels[i_int, j_int]]
+            c = [x * (1 - i_delta) * j_delta for x in pixels[i_int, j_int + 1]]
+            d = [x * i_delta * j_delta for x in pixels[i_int + 1, j_int + 1]]
+            outp[i, j] = tuple([int(a[k] + b[k] + c[k] + d[k]) for k in range(3)])
 
     return outp
 
@@ -106,7 +136,7 @@ def main():
     # YourProgram.exe C:/myDir/myImage.rgb 4000 3000 1 O2
 
     now = datetime.datetime.now()
-    upsample_functions = [nearest_neighbor]
+    upsample_functions = [nearest_neighbor_up_sampling, bilinear_up_sampling]
     downsample_functions = [random_down_sampling, gaussian_down_sampling]
 
     image_file_name = sys.argv[1]
@@ -139,6 +169,7 @@ def main():
             process_type - 1](input_pixels, resolution, process_format)
 
     write_image('result.bmp', modified_pixels, process_format)
+    print "Image (name: 'result.bmp') saved"
     print datetime.datetime.now() - now
     # write_image('original1.bmp', input_pixels, resolution)
 
