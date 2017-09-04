@@ -55,7 +55,7 @@ def average_pixels(pixels, i_min, i_max, j_min, j_max):
             r += pixels[i, j][0]
             g += pixels[i, j][1]
             b += pixels[i, j][2]
-    #print (r / n, g / n, b / n)
+    # print (r / n, g / n, b / n)
     return (r / n, g / n, b / n)
 
 
@@ -88,11 +88,25 @@ def gaussian_down_sampling(pixels, resolution, new_resolution):
     return outp
 
 
+def nearest_neighbor(pixels, resolution, new_resolution):
+    img = Image.new('RGB', tuple(new_resolution))
+    outp = img.load()
+
+    x_scale = new_resolution[0] * 1.0 / resolution[0]
+    y_scale = new_resolution[1] * 1.0 / resolution[1]
+
+    for i in range(new_resolution[0]):
+        for j in range(new_resolution[1]):
+        	outp[i, j] = pixels[int(i / x_scale), int(j / y_scale)]
+
+    return outp
+
+
 def main():
     # YourProgram.exe C:/myDir/myImage.rgb 4000 3000 1 O2
 
     now = datetime.datetime.now()
-    upsample_functions = []
+    upsample_functions = [nearest_neighbor]
     downsample_functions = [random_down_sampling, gaussian_down_sampling]
 
     image_file_name = sys.argv[1]
@@ -121,10 +135,11 @@ def main():
         modified_pixels = downsample_functions[
             process_type - 1](input_pixels, resolution, process_format)
     else:
-        modified_pixels = upsample_functions[process_type - 1]
+        modified_pixels = upsample_functions[
+            process_type - 1](input_pixels, resolution, process_format)
 
     write_image('result.bmp', modified_pixels, process_format)
     print datetime.datetime.now() - now
-    #write_image('original1.bmp', input_pixels, resolution)
+    # write_image('original1.bmp', input_pixels, resolution)
 
 main()
