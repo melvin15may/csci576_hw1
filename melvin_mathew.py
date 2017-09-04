@@ -41,10 +41,6 @@ def random_down_sampling(pixels, resolution, new_resolution):
                 j_scale = j * y_scale
             outp[i, j] = pixels[int(i_scale), int(j_scale)]
 
-            prev_j_scale = j_scale + 1
-
-        prev_i_scale = i_scale + 1
-
     return outp
 
 
